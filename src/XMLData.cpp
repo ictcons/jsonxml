@@ -6,11 +6,16 @@
  */
 
 #include "XMLData.h"
+#include "pugixml.hpp"
 
 #include <iostream>
 #include <fstream>
+#include <assert.h>
+#include <cstdlib>
+#include <algorithm>
+#include <cctype>
 
-#define DISPLAY_LIST
+#define DEBUG
 
 void XMLData::load(const std::string& _xmlfile) {
 	std::cout << "Loading " << _xmlfile << "...\n";
@@ -30,9 +35,9 @@ void XMLData::load(const std::string& _xmlfile) {
 	    throw std::runtime_error(err.str());
 	}
 
-#if defined(DISPLAY_LIST)
-    this->list();
-#endif
+//#ifdef DEBUG
+//    this->list();
+//#endif
 
     // Get the root name
     std::cout << "Root-name: " << this->rootName() << std::endl;
@@ -41,10 +46,10 @@ void XMLData::load(const std::string& _xmlfile) {
 
 // Update XML data
 void XMLData::save() {
-	std::stringstream err;
     // Serialize updated XML data back to file
     if (!m_dataObj.save_file(m_file.c_str())) {
-    	err << "Failed to save " << m_file << std::endl;
+		std::stringstream err;
+		err << "Failed to save " << m_file << std::endl;
 	    throw std::runtime_error(err.str());
     }
 
@@ -57,8 +62,9 @@ void XMLData::save() {
 
 const std::string& XMLData::rootName() {
 	if (m_root.empty()) {
-		m_rootNode = m_dataObj.first_child();
-		m_root = m_rootNode.value();
+		m_rootNode = m_dataObj.document_element();
+		if (m_rootNode)
+			m_root = m_rootNode.name();
 	}
 	return m_root;
 }
@@ -71,35 +77,66 @@ void XMLData::list() {
 	std::cout << "Not implemented\n";
 }
 
-bool XMLData::update(const DataElement& _data) {
-    std::cout << "Find element " << _data.element << std::endl;
-    pugi::xml_node root = m_dataObj.document_element();
-    // Find the requested element
-    pugi::xml_node node = root.child(_data.element.c_str());
-    if (node.empty()) {
-		std::cout << "element '" << _data.element << "' not found\n";
-		return false;
+int XMLData::update(DataElements* _dataElements) {
+	assert(_dataElements != nullptr);
+    assert(_dataElements->root == rootName());
+    std::cout << "Updating xml " << rootName() << std::endl;
+
+    // Perform one or more updates
+    int nUpdates = 0;
+    for (auto attrib : _dataElements->attributes) {
+		std::string elemPath = attrib.first;
+		std::string newValue = attrib.second;
+
+		std::string xpath_query = elemPath;
+		// Add XML tag to most subordinate child
+		std::size_t pos = xpath_query.rfind("/");
+		if (pos != std::string::npos) {
+			xpath_query.replace(pos, 1, "/@");
+		}
+#ifdef DEBUG
+		std::cout << "checking: " << xpath_query << " " << newValue << std::endl;
+#endif
+		pugi::xpath_node_set nodes = m_dataObj.select_nodes(xpath_query.c_str());
+	    if (nodes.empty()) {
+	        std::cerr << "No matching node for " << xpath_query << std::endl;
+	        continue;
+	    }
+
+	    // Iterate over the nodes in the document
+	    for (const auto& node : nodes) {
+	        // Access the node element
+#ifdef DEBUG
+	        std::cout << "Node: " << node.attribute().name() << std::endl;
+	        std::cout << "Value: " << node.attribute().value() << std::endl;
+#endif
+			// Update the attribute's value
+			std::string currValue = node.attribute().value();
+			if (currValue != newValue) {
+				if (isNumeric(newValue)) {
+					uint64_t ival = std::stoll(removeChars(newValue, "\""));
+					node.attribute().set_value(ival);
+				}
+				else
+					node.attribute().set_value(newValue.c_str());
+				std::cout << xpath_query << "=\"" << newValue << "\" updated\n";
+				nUpdates++;
+			}
+			else {
+				std::cout << xpath_query << "=\"" << newValue << "\" unchanged\n";
+			}
+		}
     }
-	pugi::xml_attribute attr = node.attribute(_data.attribute.c_str());
-	if (!attr) {
-		std::cout << "attribute '" << _data.attribute << "' not found\n";
-		return false;
+	// Save the updates
+	if (nUpdates > 0) {
+		if (! m_dataObj.save_file(m_file.c_str())) {
+			std::stringstream ss;
+			ss << "Failed to save " << m_file << std::endl;
+			throw std::runtime_error(ss.str());
+		}
 	}
 
-	// If value is same as value expected, ignore attribute update
-	if (std::string(attr.value()) == _data.value) {
-		// If attribute is found, print the node name and attribute value
-		std::cout << _data.attribute << "=\"" << attr.value() << "\" unchanged\n";
-		return false;
-	}
-
-	// else update value
-	// If attribute is found, print the node name and attribute value
-	std::string oldValue(attr.value());
-	attr.set_value(_data.value.c_str());
-	std::cout << _data.attribute
-		<< "=\"" << oldValue << "\" -> \"" << _data.value << "\"\n";
-	return true;
+	return nUpdates;
 }
 
 

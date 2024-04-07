@@ -10,7 +10,9 @@
 
 #include <string>
 
-void updateXML(const std::string& _jsonfile, const std::string& _xmlfile);
+int UpdateData(const std::string& _jsonUpdates,
+			   const std::string& _jsonfile,
+			   const std::string& _xmlfile = std::string());
 
 
 #endif /* UPDATEXML_H_ */

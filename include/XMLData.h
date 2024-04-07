@@ -8,8 +8,8 @@
 #ifndef XMLDATA_H_
 #define XMLDATA_H_
 
-#include <DataObject.h>
 #include "pugixml.hpp"
+#include "DataObject.h"
 
 class XMLData: public DataObject {
 public:
@@ -21,7 +21,7 @@ public:
 	void list() override;
 	void save() override;
 
-	bool update(const DataElement& data);
+	int update(DataElements* data);
 
 private:
 	std::string m_file;
