@@ -15,7 +15,7 @@ using namespace std;
 #include <filesystem>
 namespace fs = std::filesystem;
 
-#include "UpdateXML.h"
+#include <UpdateData..h>
 #include "Timestamp.h"
 
 static const std::string version = "0.2";
@@ -23,37 +23,41 @@ static const std::string subpath = "\\Debug\\";
 
 int main(int argc, char *argv[]) {
 	std::stringstream err;
-	enum {json, xml, upds};
+	enum {json, xml};
 	std::vector<std::string> file;
 	std::string jUpdateRequest;
 
 	for (int i = 1; i < argc; i++) {
 		std::string arg = argv[i];
-		std::cout << "arg: " << arg << std::endl;
 		if (arg.find("--version") != std::string::npos) {
 			std::cout << "jsonxml, version " << version << ", "
 				<< "built " << buildTime() << std::endl;
 			return 0;
 		}
 		else if (arg.find("--help") != std::string::npos) {
-			std::cout << " > jsonxml.exe -upd <update-request> <datafile[.json]> [<datafile[.xml]>]\n";
-			std::cout << " -upd <update-request>\n";
-			std::cout << "      <update-request.json>\n";
-			std::cout << "                     The update request without the .json extension indicates\n";
-			std::cout << "                     that the input is a string, a subset of the JSON data file\n";
-			std::cout << "                     contents, that contains attribute updates to be applied to\n";
-			std::cout << "                     the JSON and XML data files\n";
-			std::cout << "                     Alternatively, a JSON file that contains the JSON subset of\n";
-			std::cout << "                     attribute updates can also specified.\n";
-			std::cout << " <datafile[.json]>   The name of the target JSON data file, related to the XML\n";
-			std::cout << "                     data file, that is to be updated. The \".json\" extension\n";
-			std::cout << "                     is added if not specified.\n";
-			std::cout << " [<datafile[.xml]>]  The name of the XML file, from which the the JSON file was\n";
-			std::cout << "                     created. By default, the two names are the same, so the XML\n";
-			std::cout << "                     file name will be defaulted if not entered.\n";
+			std::cout << "jsonxml.exe -u update-request datafile[.json] [datafile[.xml]]\n\n";
+			std::cout << "  -u[pdate] update-request, or\n";
+			std::cout << "            update-request.json\n";
+			std::cout << "	   The update-request argument is a subset of the JSON data\n";
+			std::cout << "	   file in the next argument, that has one or more attributes\n";
+			std::cout << "	   with new data to replace existing data in the JSON file.\n";
+			std::cout << "	   The input can either be a JSON data string, or the name of\n";
+			std::cout << "	   another JSON data file that contains the JSON data string.\n\n";
+			std::cout << "  datafile[.json]\n";
+			std::cout << "	   The name of the JSON data file to be updated. The \".json\"\n";
+			std::cout << "	   extension will be added if not specified.\n\n";
+			std::cout << "  [datafile[.xml]], or\n";
+			std::cout << "  -x[ml]\n";
+			std::cout << "	   The name of the XML file which is paired with the JSON data\n";
+			std::cout << "	   file. The XML file will also be updated with the same data.\n";
+			std::cout << "	   By default, the two file names are identical, except for the\n";
+			std::cout << "	   extensions. Alternatively, the \"-x\" option can be used,\n";
+			std::cout << "	   instead of the XML file name, to update the paired XML file.\n";
+			std::cout << "	   If neither option is specified, only the JSON data file will\n";
+			std::cout << "	   be updated.\n";
 			return 0;
 		}
-		else if (arg.find("-upd") != std::string::npos) {
+		else if (arg.find("-u") != std::string::npos) {
 			jUpdateRequest = argv[++i];
 		}
 		else {
@@ -63,8 +67,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (file.empty()) {
-		std::cout << " jsonxml.exe -upd <update-request> <datafile[.json]> [<datafile[.xml]>]\n";
-		std::cout << " > run jsonxml.exe --help for more information.\n";
+		std::cout << "jsonxml.exe -u[pdate] update-request datafile[.json] [datafile[.xml]]\n";
+		std::cout << "For information, run 'jsonxml.exe --help'\n";
 		return 0;
 	}
 
@@ -84,6 +88,7 @@ int main(int argc, char *argv[]) {
 			// Copy the JSON file name & append extension next instruction.
 			file.push_back(file[json].substr(0, pos));
 		}
+
 		// Handle missing extension
 		if ((pos = file[xml].find('.')) == std::string::npos) {
 			file[xml].append(".xml");
