@@ -5,7 +5,7 @@
  *      Author: gds
  */
 
-#include <UpdateData..h>
+#include <UpdateData.h>
 #include "JSONData.h"
 #include "XMLData.h"
 #include "DataObject.h"
@@ -21,8 +21,7 @@ typedef DataObject::DataElements DataElements;
 #define DEBUG 0
 
 
-//**** want to have a XML-only update option, so an already updated
-//**** json file can be used as the input to update the xml data.
+//**** Do we want to have a XML-only update or JSON-only option? ****
 
 int UpdateData( const std::string& _jUpdateRequest,	// JSON string or file
 				const std::string& _jsonfile,
