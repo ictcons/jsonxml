@@ -120,6 +120,6 @@ int main(int argc, char *argv[]) {
 	    return 1;
 	}
 
-    std::cout << "Data files updated successfully.\n";
+    std::cout << "Data files updated\n";
     return 0;
 }

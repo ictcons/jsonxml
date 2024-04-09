@@ -18,9 +18,10 @@ public:
 
 	void load(const std::string& _file) override;
 	const std::string& rootName() override;
-	void list() override;
 	void save() override;
-
+#ifdef DEBUG
+	void list() override;
+#endif
 	int update(DataElements* data);
 
 private:

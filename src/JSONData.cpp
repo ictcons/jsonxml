@@ -12,11 +12,11 @@
 #include <vector>
 #include <nlohmann/json.hpp>
 
-#define DEBUG
-
 void JSONData::load(const std::string& _jsfile)  {
    // Load JSON data from a file
+#ifdef DEBUG
 	std::cout << "Loading " << _jsfile << "...\n";
+#endif
 	m_jsonFile = _jsfile;
 
 	// Open data file
@@ -41,8 +41,9 @@ void JSONData::load(const std::string& _jsfile)  {
     // Parse the string into a JSON object
     try {
     	ss >> m_dataObj;
+#ifdef DEBUG
     	std::cout << "m_dataObj: " << m_dataObj << std::endl;
-
+#endif
     } catch (json::parse_error& e) {
     	err << "JSON parse error: " << e.what() << std::endl;
 		throw std::runtime_error(err.str());
@@ -88,12 +89,14 @@ const std::string& JSONData::rootName() {
 	return m_root;
 }
 
+#ifdef DEBUG
 void JSONData::list() {
 	// Iterate over the JSON object
 	for (auto it = m_dataObj.begin(); it != m_dataObj.end(); ++it) {
 		std::cout << it.key() << " : " << it.value() << std::endl;
 	}
 }
+#endif
 
 // Update the data in one attribute
 bool JSONData::updateAttribute(const std::string& path,
@@ -141,8 +144,9 @@ bool JSONData::updateAttribute(const std::string& path,
 		}
 		*currentObject = newValue;
 	}
+#ifdef DEBUG
 	std::cout << "Attribute " << path << " updated" << std::endl;
-
+#endif
 	// Save the change
 	save();
 
@@ -190,8 +194,9 @@ int JSONData::update(const std::string& _jRequestUpdate,
 		}
 		ifs >> requestUpdate;
 	}
+#ifdef DEBUG
 	std::cout << "requestUpdate: " << requestUpdate << std::endl;
-
+#endif
 	// Set root
 	_dataElements->root = rootName();
 
@@ -214,7 +219,7 @@ int JSONData::update(const std::string& _jRequestUpdate,
     		continue;
     	}
 #ifdef DEBUG
-        std::cout << "Adding " << elemPath << " : " << value << std::endl;
+        std::cout << "Added " << elemPath << " : " << value << std::endl;
 #endif
     	_dataElements->add(elemPath, value);
 	}
@@ -222,18 +227,15 @@ int JSONData::update(const std::string& _jRequestUpdate,
     // Perform each update
     int nUpdates = 0;
     for (auto attrib : _dataElements->attributes) {
-		std::string elemPath = attrib.first;
-		std::cout << "elemPath: " << elemPath << std::endl;
+		std::string path = attrib.first;
 		std::string newValue = removeChars(attrib.second, "\"");
 		// Have updateAttribute() do the complex JSON processing.
-		if (updateAttribute(elemPath, newValue)) {
-#ifdef DEBUG
-			std::cout << elemPath << ": " << newValue << " updating\n";
-#endif
+		if (updateAttribute(path, newValue)) {
 			nUpdates++;
+			std::cout << "json:" << path << ":\"" << newValue << "\" updated\n";
 		}
 		else {
-			std::cout << elemPath << " unchanged\n";
+			std::cout << "json:" << path << ":\"" << newValue << "\" unchanged\n";
 		}
     }
 

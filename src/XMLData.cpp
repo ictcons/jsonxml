@@ -15,10 +15,11 @@
 #include <algorithm>
 #include <cctype>
 
-#define DEBUG
 
 void XMLData::load(const std::string& _xmlfile) {
+#ifdef DEBUG
 	std::cout << "Loading " << _xmlfile << "...\n";
+#endif
 	m_file = _xmlfile;
 
 	// Open data file
@@ -35,12 +36,10 @@ void XMLData::load(const std::string& _xmlfile) {
 	    throw std::runtime_error(err.str());
 	}
 
-//#ifdef DEBUG
-//    this->list();
-//#endif
-
     // Get the root name
+#ifdef DEBUG
     std::cout << "Root-name: " << this->rootName() << std::endl;
+#endif
     return;
 }
 
@@ -53,8 +52,9 @@ void XMLData::save() {
 	    throw std::runtime_error(err.str());
     }
 
+#ifdef DEBUG
 	std::cout << m_file << " saved\n";
-
+#endif
     // Note: if a problem is detected with the updated XML file, the
     // original source XML file can be downloaded again from the device.
     return;
@@ -69,6 +69,7 @@ const std::string& XMLData::rootName() {
 	return m_root;
 }
 
+#ifdef DEBUG
 void XMLData::list() {
 	// Iterate over the JSON object
 //	for (auto it = m_dataObj.begin(); it != m_dataObj.end(); ++it) {
@@ -76,30 +77,32 @@ void XMLData::list() {
 //	}
 	std::cout << "Not implemented\n";
 }
+#endif
 
 int XMLData::update(DataElements* _dataElements) {
 	assert(_dataElements != nullptr);
     assert(_dataElements->root == rootName());
+#ifdef DEBUG
     std::cout << "Updating xml " << rootName() << std::endl;
-
+#endif
     // Perform one or more updates
     int nUpdates = 0;
     for (auto attrib : _dataElements->attributes) {
 		std::string elemPath = attrib.first;
 		std::string newValue = attrib.second;
 
-		std::string xpath_query = elemPath;
+		std::string path = elemPath;
 		// Add XML tag to most subordinate child
-		std::size_t pos = xpath_query.rfind("/");
+		std::size_t pos = path.rfind("/");
 		if (pos != std::string::npos) {
-			xpath_query.replace(pos, 1, "/@");
+			path.replace(pos, 1, "/@");
 		}
 #ifdef DEBUG
-		std::cout << "checking: " << xpath_query << " " << newValue << std::endl;
+		std::cout << "checking: " << path << " " << newValue << std::endl;
 #endif
-		pugi::xpath_node_set nodes = m_dataObj.select_nodes(xpath_query.c_str());
+		pugi::xpath_node_set nodes = m_dataObj.select_nodes(path.c_str());
 	    if (nodes.empty()) {
-	        std::cerr << "No matching node for " << xpath_query << std::endl;
+	        std::cerr << "No matching node for " << path << std::endl;
 	        continue;
 	    }
 
@@ -119,11 +122,11 @@ int XMLData::update(DataElements* _dataElements) {
 				}
 				else
 					node.attribute().set_value(newValue.c_str());
-				std::cout << xpath_query << "=\"" << newValue << "\" updated\n";
+				std::cout << "xml:" << path << "=" << newValue << " updated\n";
 				nUpdates++;
 			}
 			else {
-				std::cout << xpath_query << "=\"" << newValue << "\" unchanged\n";
+				std::cout << "xml:" << path << "=" << newValue << " unchanged\n";
 			}
 		}
     }

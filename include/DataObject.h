@@ -17,12 +17,7 @@ bool isNumeric(const std::string& s);
 bool fileExists(const std::string& f);
 const std::string& removeChars(std::string& s, const std::string& chars);
 
-
-//	char* p_end{};
-//	const char* p = str.c_str();
-//	std::strtol(p, &p_end, 10);
-//	return (p == p_end);
-//};
+//#define DEBUG
 
 class DataObject {
 public:
@@ -31,8 +26,10 @@ public:
 
 	virtual void load(const std::string& _file) = 0;
 	virtual const std::string& rootName() = 0;
-	virtual void list() = 0;
 	virtual void save() = 0;
+#ifdef DEBUG
+	virtual void list() = 0;
+#endif
 
 	struct DataElements {
 		// pair<element-path ("/root/A/B/C"), value>
