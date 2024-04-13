@@ -18,7 +18,7 @@ namespace fs = std::filesystem;
 #include <UpdateData.h>
 #include "Timestamp.h"
 
-static const std::string version = "0.2";
+static const std::string version = "1.0";
 static const std::string subpath = "\\Debug\\";
 
 int main(int argc, char *argv[]) {
@@ -38,23 +38,18 @@ int main(int argc, char *argv[]) {
 			std::cout << "jsonxml.exe -u update-request datafile[.json] [datafile[.xml]]\n\n";
 			std::cout << "  -u[pdate] update-request, or\n";
 			std::cout << "            update-request.json\n";
-			std::cout << "	   The update-request argument is a subset of the JSON data\n";
-			std::cout << "	   file in the next argument, that has one or more attributes\n";
-			std::cout << "	   with new data to replace existing data in the JSON file.\n";
-			std::cout << "	   The input can either be a JSON data string, or the name of\n";
-			std::cout << "	   another JSON data file that contains the JSON data string.\n\n";
+			std::cout << "	   A JSON data \"request\" that contains updated values to be assigned\n";
+			std::cout << "	   to attributes in the associated JSON and XML paired data sets. The\n";
+			std::cout << "     input must be a JSON subset text of the data file to be updated, or\n";
+			std::cout << "	   the name of a JSON file that contains the JSON update text.\n\n";
 			std::cout << "  datafile[.json]\n";
-			std::cout << "	   The name of the JSON data file to be updated. The \".json\"\n";
-			std::cout << "	   extension will be added if not specified.\n\n";
-			std::cout << "  [datafile[.xml]], or\n";
-			std::cout << "  -x[ml]\n";
-			std::cout << "	   The name of the XML file which is paired with the JSON data\n";
-			std::cout << "	   file. The XML file will also be updated with the same data.\n";
-			std::cout << "	   By default, the two file names are identical, except for the\n";
-			std::cout << "	   extensions. Alternatively, the \"-x\" option can be used,\n";
-			std::cout << "	   instead of the XML file name, to update the paired XML file.\n";
-			std::cout << "	   If neither option is specified, only the JSON data file will\n";
-			std::cout << "	   be updated.\n";
+			std::cout << "	   The name of the JSON data file to be updated. If specified without\n";
+			std::cout << "	   the \".json\" extension, the name will refer to both JSON and XML\n";
+			std::cout << "	   files, and extensions wil be applied bu default.\n\n";
+			std::cout << "  [datafile[.xml]]\n";
+			std::cout << "	   The name of the XML file which is paired with the JSON data file.\n";
+			std::cout << "	   By default, if not specified, the XML file name will be same as the\n"; ;
+			std::cout << "	   JSON data file but with the \".xml\" extensions.\n";
 			return 0;
 		}
 		else if (arg.find("-u") != std::string::npos) {
