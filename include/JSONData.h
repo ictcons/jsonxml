@@ -28,9 +28,7 @@ public:
 	void load(const std::string& _file) override;
 	const std::string& rootName() override;
 	void save() override;
-#ifdef DEBUG
 	void list() override;
-#endif
 
 	int update(const std::string& _jUpdateRequest,
 				DataElements* _data);

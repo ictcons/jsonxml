@@ -10,14 +10,15 @@
 
 #include <string>
 #include <sstream>
+#include <iostream>
 #include <vector>
 #include <memory>
+#include <algorithm>
 
 bool isNumeric(const std::string& s);
 bool fileExists(const std::string& f);
 const std::string& removeChars(std::string& s, const std::string& chars);
 
-//#define DEBUG
 
 class DataObject {
 public:
@@ -27,9 +28,7 @@ public:
 	virtual void load(const std::string& _file) = 0;
 	virtual const std::string& rootName() = 0;
 	virtual void save() = 0;
-#ifdef DEBUG
 	virtual void list() = 0;
-#endif
 
 	struct DataElements {
 		// pair<element-path ("/root/A/B/C"), value>
@@ -48,12 +47,20 @@ public:
 		{
 		}
 
-		void add(const std::string& _elemPath, auto _value) {
+		bool add(const std::string& _elemPath, auto _value) {
 			// Use stream to handle both string and int attributes
+			for (auto& attr : this->attributes) {
+				if (attr.first == _elemPath) {
+					return false;
+				}
+			}
 			std::ostringstream oss;
 			oss << _value;
 			attributes.push_back( {_elemPath, oss.str()} );
+			//std::cout << "Added: " << _elemPath << std::endl;
+			return true;
 		}
+
 		const std::string& getValue(const std::string& _elemPath) const {
 			static const std::string empty;
 			for (auto& attr : this->attributes) {
@@ -64,7 +71,7 @@ public:
 			return empty;
 		}
 		std::string root;	// name
-		// vector of multiple attributes update
+		// vector of multiple attribute updates
 		std::vector<Attribute> attributes;
 	};
 

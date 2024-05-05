@@ -6,7 +6,7 @@
  */
 
 #include "JSONData.h"
-
+#include "UpdateData.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -14,9 +14,7 @@
 
 void JSONData::load(const std::string& _jsfile)  {
    // Load JSON data from a file
-#ifdef DEBUG
 	std::cout << "Loading " << _jsfile << "...\n";
-#endif
 	m_jsonFile = _jsfile;
 
 	// Open data file
@@ -41,9 +39,8 @@ void JSONData::load(const std::string& _jsfile)  {
     // Parse the string into a JSON object
     try {
     	ss >> m_dataObj;
-#ifdef DEBUG
-    	std::cout << "m_dataObj: " << m_dataObj << std::endl;
-#endif
+    	VERBOSE(std::cout << "m_dataObj: " << m_dataObj << std::endl;)
+
     } catch (json::parse_error& e) {
     	err << "JSON parse error: " << e.what() << std::endl;
 		throw std::runtime_error(err.str());
@@ -61,16 +58,12 @@ void JSONData::save() {
 		throw std::runtime_error(err.str());
     }
 
-#ifdef DEBUG
-    std::cout << std::setw(2) << m_dataObj << std::endl;
-#endif
+    VERBOSE(std::cout << std::setw(2) << m_dataObj << std::endl;)
 
     jfile << std::setw(2) << m_dataObj << std::endl;
     jfile.close();
 
-#ifdef DEBUG
-	std::cout << m_jsonFile << " updated\n";
-#endif
+    VERBOSE(std::cout << m_jsonFile << " saved\n";)
 
     // Note: this app can be used to update a local cached XML data file.
 	// if a problem is detected with the updated XML file, the original
@@ -89,14 +82,12 @@ const std::string& JSONData::rootName() {
 	return m_root;
 }
 
-#ifdef DEBUG
 void JSONData::list() {
 	// Iterate over the JSON object
 	for (auto it = m_dataObj.begin(); it != m_dataObj.end(); ++it) {
 		std::cout << it.key() << " : " << it.value() << std::endl;
 	}
 }
-#endif
 
 // Update the data in one attribute
 bool JSONData::updateAttribute(const std::string& path,
@@ -120,33 +111,22 @@ bool JSONData::updateAttribute(const std::string& path,
 	}
 
     // Check if attribute needs to be updated
-#ifdef DEBUG
-	std::stringstream ss;
-	ss << "No change to " << path;
-#endif
+
 	if (currentObject->is_number()) {
 		long long newInt = atoll(newValue.c_str()) ;
 		long long oldValue = *currentObject;
 		if (newInt == oldValue) {
-#ifdef DEBUG
-			std::cout << ss.str() << std::endl;
-#endif
 			return false;
 		}
 		*currentObject = newValue;
 	} else {
 		std::string oldValue = *currentObject;
 		if (newValue == oldValue) {
-#ifdef DEBUG
-			std::cout << ss.str() << std::endl;
-#endif
 			return false;
 		}
 		*currentObject = newValue;
 	}
-#ifdef DEBUG
 	std::cout << "Attribute " << path << " updated" << std::endl;
-#endif
 	// Save the change
 	save();
 
@@ -176,66 +156,61 @@ void JSONData::iterateRequest(const json& j, const std::string& prefix) {
 
 // The JSON update request may contain more than one attribute.
 // Argument #2 returns the update data content for XML updating.
-int JSONData::update(const std::string& _jRequestUpdate,
-					 DataElements* _dataElements) {
+int JSONData::update(const std::string& _jUpdates, DataElements* _dataElements) {
 	assert(_dataElements != nullptr);
-	assert(! _jRequestUpdate.empty());
+	assert(! _jUpdates.empty());
 
-	std::string requestUpdate = _jRequestUpdate;
-	// If the JSON data update request is in a .json file,
+	std::string updates = _jUpdates;
+	// If the JSON data update request is a .json file,
 	// insert the file's json data into the request string.
-	if ((requestUpdate.find(".json") != std::string::npos) ||
-		(requestUpdate.find(".JSON") != std::string::npos)) {
-		std::ifstream ifs(requestUpdate);
+	if ((updates.find(".json") != std::string::npos) ||
+		(updates.find(".JSON") != std::string::npos)) {
+		std::ifstream ifs(updates);
 		if (!ifs.is_open()) {
 			std::stringstream ss;
-			ss << "Failed to open " << requestUpdate;
+			ss << "Failed to open " << updates;
 			throw std::runtime_error(ss.str());
 		}
-		ifs >> requestUpdate;
+		ifs >> updates;
 	}
-#ifdef DEBUG
-	std::cout << "requestUpdate: " << requestUpdate << std::endl;
-#endif
+	VERBOSE(std::cout << "requestUpdate: " << updates << std::endl;)
+
 	// Set root
 	_dataElements->root = rootName();
 
 	// Parse the json-formatted data update request.
 	// The update request(s) are streamed into in m_iterRequestSS.
-	json jRequest = json::parse(requestUpdate);
+	json jRequest = json::parse(updates);
 	iterateRequest(jRequest);
-#ifdef DEBUG
-	std::cout << m_iterRequestSS.str() << std::endl;
-#endif
+	VERBOSE(std::cout << "request: " << m_iterRequestSS.str() << std::endl;)
 
 	// Prepare the DataElements object, to share the data update
 	// request info with the XMLData object. The multiple update
 	// requests are supported.
+	std::string path, value;
 	_dataElements->attributes.clear();
     while (!m_iterRequestSS.eof()) {
-    	std::string elemPath, value;
-    	m_iterRequestSS >> elemPath >> value;
-    	if (elemPath.empty() || value.empty()) {
+    	m_iterRequestSS >> path >> value;
+    	if (path.empty() || value.empty()) {
     		continue;
     	}
-#ifdef DEBUG
-        std::cout << "Added " << elemPath << " : " << value << std::endl;
-#endif
-    	_dataElements->add(elemPath, value);
+    	if (! _dataElements->add(path, value)) {
+    		VERBOSE(std::cout << "Duplicate " << path << " not added\n";)
+    	}
 	}
 
     // Perform each update
     int nUpdates = 0;
     for (auto attrib : _dataElements->attributes) {
-		std::string path = attrib.first;
-		std::string newValue = removeChars(attrib.second, "\"");
+		path = attrib.first;
+		value = removeChars(attrib.second, "\"");
 		// Have updateAttribute() do the complex JSON processing.
-		if (updateAttribute(path, newValue)) {
+		if (updateAttribute(path, value)) {
 			nUpdates++;
-			std::cout << "json:" << path << ":\"" << newValue << "\" updated\n";
+			std::cout << "json:" << path << ":\"" << value << "\" updated\n";
 		}
 		else {
-			std::cout << "json:" << path << ":\"" << newValue << "\" unchanged\n";
+			std::cout << "json:" << path << ":\"" << value << "\" unchanged\n";
 		}
     }
 
