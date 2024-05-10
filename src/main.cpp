@@ -12,7 +12,8 @@
 //   The solution/project is configured to include in the build third-party
 //   libraries from nlohmann-json (https://github.com/nlohmann/json.git)
 //   and pugixml (https://pugixml.org/). Their build folders must reside
-//   in the jsonxml project folder at the same level as src and include.
+//   in the jsonxml project folder at the same level as src and include
+//   and built static libraries must be in jsonxml\lib folder.
 //   This version is built for Windows 10. A Linux version can be produced
 //   when needed.
 //============================================================================
