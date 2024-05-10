@@ -1,8 +1,9 @@
 /*
- * UpdateData.cpp
+ * jsonxml: UpdateData.cpp
  *
- *  Created on: 27/03/2024
- *      Author: gds
+ *  Created on: 10/05/2024
+ *      Author: gds, Maran Consulting
+ *      Version 1.0
  */
 
 #include "UpdateData.h"
@@ -21,9 +22,9 @@ typedef DataObject::DataElements DataElements;
 // Verbose logging
 bool UpdateData::s_verbose = false;
 
-//**** Do we want to have a XML-only update or JSON-only option? ****
+//*** Do we want to have a XML-only update or JSON-only option? ****
 
-int UpdateData::Process( const std::string& _jUpdates,
+int UpdateData::process( const std::string& _jUpdates,
 						 const std::string& _jsonfile,
 						 const std::string& _xmlfile) {
 	// Instantiate data objects
@@ -31,19 +32,36 @@ int UpdateData::Process( const std::string& _jUpdates,
 	std::unique_ptr<XMLData> xmld(new XMLData);
 	std::unique_ptr<DataElements> dataElements;
 
-	jsd->load(_jsonfile);
+	m_results ="No updates\n";
 
+	// Load the JSON data object
+	jsd->load(_jsonfile);
+	// Update the JSON data file first; dataElements is also updated.
 	dataElements = std::make_unique<DataElements>(jsd->rootName());
 	int jsonUpdates = jsd->update(_jUpdates, dataElements.get());
+	if (jsonUpdates) {
+		m_results = jsd->results() ;
+	}
 
+	// Load the XML data object
 	xmld->load(_xmlfile);
-	VERBOSE(xmld->list());
-
-	// The previous XML data file must be copied for a backup before processing.
+	// Update the XML data file using the structured updates in dataElements.
+	// Process updates to the XML data file even when there are no JSON updates
+	// to insure JSON:XML data equality.
 	int xmlUpdates = xmld->update(dataElements.get());
-	assert(jsonUpdates == xmlUpdates);
+	if (xmlUpdates) {
+		m_results += xmld->results();
+	}
 
-	return xmlUpdates;
+	if (xmlUpdates != jsonUpdates) {
+	    std::stringstream ss;
+		ss << "Note that update totals differ: "
+			"json="<< jsonUpdates << ", xml=" << xmlUpdates << std::endl;
+		m_results += ss.str();
+	}
+
+	// return number of data updates - not used.
+	return jsonUpdates;
 }
 
 

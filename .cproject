@@ -56,9 +56,12 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.360902020.569432623" name="UpdateData - Copy.cpp" rcbsApplicability="disable" resourcePath="src/UpdateData - Copy.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.594096426.696323905">
+						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.594096426.696323905" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.594096426"/>
+					</fileInfo>
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="pugixml/src"/>
-						<entry excluding="jsonxml.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+						<entry excluding="UpdateData - Copy.cpp|jsonxml.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

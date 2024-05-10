@@ -1,8 +1,9 @@
 /*
- * XMLData.cpp
+ * jsonxml: XMLData.cpp
  *
- *  Created on: 27/03/2024
- *      Author: gds
+ *  Created on: 10/05/2024
+ *      Author: gds, Maran Consulting
+ *      Version 1.0
  */
 
 #include "XMLData.h"
@@ -18,7 +19,7 @@
 
 
 void XMLData::load(const std::string& _xmlfile) {
-	std::cout << "Loading " << _xmlfile << "...\n";
+	VERBOSE(std::cout << "Loading " << _xmlfile << "...\n";)
 	m_file = _xmlfile;
 
 	// Open data file
@@ -34,10 +35,20 @@ void XMLData::load(const std::string& _xmlfile) {
 		err << "Failed to load " << m_file;
 	    throw std::runtime_error(err.str());
 	}
-
-    // Get the root name
+    // Report the root name
     VERBOSE(std::cout << "Root-name: " << this->rootName() << std::endl;)
     return;
+}
+
+void XMLData::backup() {
+	std::string backupFile = m_file + ".bak";
+    if (!m_dataObj.save_file(backupFile.c_str())) {
+		std::stringstream err;
+		err << "Failed to backup " << m_file << std::endl;
+	    throw std::runtime_error(err.str());
+    }
+    VERBOSE(std::cout << m_file << " backed up\n";)
+	return;
 }
 
 // Update XML data
@@ -48,7 +59,7 @@ void XMLData::save() {
 		err << "Failed to save " << m_file << std::endl;
 	    throw std::runtime_error(err.str());
     }
-	std::cout << m_file << " saved\n";
+    VERBOSE(std::cout << m_file << " saved\n";)
     // Note: if a problem is detected with the updated XML file, the
     // original source XML file can be downloaded again from the device.
     return;
@@ -71,13 +82,16 @@ void XMLData::list() {
 	std::cout << "Not implemented\n";
 }
 
+// Perform one or more updates
 int XMLData::update(DataElements* _dataElements) {
 	assert(_dataElements != nullptr);
     assert(_dataElements->root == rootName());
-    VERBOSE(std::cout << "Updating xml " << rootName() << std::endl;)
 
-    // Perform one or more updates
-    int nUpdates = 0;
+    VERBOSE(std::cout << "Updating xml: " << rootName() << std::endl;)
+
+    int nUpdated = 0;
+	m_results.clear();
+
     for (auto attrib : _dataElements->attributes) {
 		std::string path = attrib.first;
 		std::string newValue = attrib.second;
@@ -87,9 +101,6 @@ int XMLData::update(DataElements* _dataElements) {
 		if (pos != std::string::npos) {
 			path.replace(pos, 1, "/@");
 		}
-
-		VERBOSE(std::cout << "checking: " << path << " " << newValue << std::endl;)
-
 		pugi::xpath_node_set nodes = m_dataObj.select_nodes(path.c_str());
 	    if (nodes.empty()) {
 	        std::cerr << "No matching node for " << path << std::endl;
@@ -98,10 +109,7 @@ int XMLData::update(DataElements* _dataElements) {
 
 	    // Iterate over the nodes in the document
 	    for (const auto& node : nodes) {
-	        // Access the node element
-	    	VERBOSE(std::cout << "Node: " << node.attribute().name() << std::endl;)
-			VERBOSE(std::cout << "Value: " << node.attribute().value() << std::endl;)
-
+			std::stringstream ss;
 			// Update the attribute's value
 			std::string currValue = node.attribute().value();
 			if (currValue != newValue) {
@@ -111,24 +119,24 @@ int XMLData::update(DataElements* _dataElements) {
 				}
 				else
 					node.attribute().set_value(newValue.c_str());
-				std::cout << "xml:" << path << "=" << newValue << " updated\n";
-				nUpdates++;
+				ss << "xml:" << path << "=" << newValue << " updated\n";
+				nUpdated++;
 			}
 			else {
-				std::cout << "xml:" << path << "=" << newValue << " unchanged\n";
+				ss << "xml:" << path << "=" << newValue << " unchanged\n";
 			}
+			VERBOSE(std::cout << ss.str();)
+			m_results += ss.str();
 		}
     }
+
 	// Save the updates
-	if (nUpdates > 0) {
-		if (! m_dataObj.save_file(m_file.c_str())) {
-			std::stringstream ss;
-			ss << "Failed to save " << m_file << std::endl;
-			throw std::runtime_error(ss.str());
-		}
+	if (nUpdated) {
+		backup();
+		save();
 	}
 
-	return nUpdates;
+	return nUpdated;
 }
 
 

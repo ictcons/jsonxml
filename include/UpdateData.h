@@ -1,8 +1,9 @@
 /*
- * UpdateXML.h
+ * jsonxml: UpdateXML.h
  *
- *  Created on: 20/03/2024
- *      Author: gds
+ *  Created on: 10/05/2024
+ *      Author: gds, Maran Consulting
+ *      Version 1.0
  */
 
 #ifndef UPDATEXML_H_
@@ -19,9 +20,9 @@ public:
 	UpdateData() = default;
 	~UpdateData() = default;
 
-	static int Process(const std::string& _jsonUpdates,
-						const std::string& _jsonfile,
-						const std::string& _xmlfile = std::string());
+	int process(const std::string& _jsonUpdates,
+				const std::string& _jsonfile,
+				const std::string& _xmlfile = std::string());
 
 	static bool showVerbose() {
 		return UpdateData::s_verbose;
@@ -30,8 +31,13 @@ public:
 		UpdateData::s_verbose = true;
 	}
 
+	const std::string& results() const {
+		return m_results;
+	}
+
 private:
 	static bool s_verbose;
+	std::string m_results;
 
 };
 

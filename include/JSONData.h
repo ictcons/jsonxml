@@ -1,8 +1,9 @@
 /*
- * JSONData.h
+ * jsonxml: JSONData.h
  *
- *  Created on: 27/03/2024
- *      Author: gds
+ *  Created on: 10/05/2024
+ *      Author: gds, Maran Consulting
+ *      Version 1.0
  */
 
 #ifndef JSONDATA_H_
@@ -30,8 +31,14 @@ public:
 	void save() override;
 	void list() override;
 
+	void backup();
+
 	int update(const std::string& _jUpdateRequest,
 				DataElements* _data);
+
+	const std::string& results() const {
+		return m_results;
+	}
 
 private:
 	void iterateRequest(const json& j,
@@ -43,7 +50,7 @@ private:
 	std::stringstream m_iterRequestSS;
 	std::string m_jsonFile;
     std::string m_root;
-    int nUpdates = 0;
+    std::string m_results;
     std::vector<std::string> m_segments;
 
 };

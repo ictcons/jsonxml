@@ -1,9 +1,20 @@
 //============================================================================
-// Name        : jsonxml
-// Author      : 
-// Version     :
+// Name        : jsonxml: main.cpp
+// Author      : gds, Maran Consulting
+// Version     : 1.0
+// Released:   : May 10, 2024
 // Copyright   : Your copyright notice
-// Description : Hello World in C++, Ansi-style
+// Description :
+//   Provide an API function (exe tool) to update attribute data within a
+//   JSON:XML pair of data files. The JSON file is produced by a conversion
+//   of the XML data file. The JSON file provides readable data while the
+//   XML data file resides in and used by a digital device.
+//   The solution/project is configured to include in the build third-party
+//   libraries from nlohmann-json (https://github.com/nlohmann/json.git)
+//   and pugixml (https://pugixml.org/). Their build folders must reside
+//   in the jsonxml project folder at the same level as src and include.
+//   This version is built for Windows 10. A Linux version can be produced
+//   when needed.
 //============================================================================
 
 #include <iostream>
@@ -95,6 +106,7 @@ int main(int argc, char *argv[]) {
 		if ((pos = file.back().find(".xml")) == std::string::npos) {
 			file.back().append(".xml");
 		}
+		VERBOSE(std::cout << "xml file: " << file.back() << std::endl;)
 
 		// Check existence of the two files
 #ifdef DEBUG
@@ -116,19 +128,19 @@ int main(int argc, char *argv[]) {
 			}
 			// Update file array with full path & list
 			f = fp;
-			VERBOSE(std::cout << f << std::endl;)
 		}
 
 		// Process update of XML data object with data changes
 		// provided in the JSON data object
-		UpdateData::Process(file[upds], file[json], file[xml]);
+		UpdateData udp;
+		udp.process(file[upds], file[json], file[xml]);
+
+		std::cout << udp.results();
 	}
 
 	catch (const std::exception& e) {
 	    std::cout << "Error: " << e.what() << std::endl;
 	    return 1;
 	}
-
-    std::cout << "Data files updated\n";
     return 0;
 }
